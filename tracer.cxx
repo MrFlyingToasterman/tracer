@@ -27,6 +27,9 @@
 #include <iostream>
 #include <unistd.h>
 #include <stdio.h>
+#include <fstream>
+#include <string.h>
+
 using namespace std;
 
 string version = "1.0";
@@ -56,6 +59,39 @@ int checkroot() {
 	return 0;
 }
 
+void readFromConfig(string pattern) {
+	string line;
+	
+	ifstream configfile ("/etc/tracer.conf");
+	if (configfile.is_open()) {
+		while ( getline (configfile, line) ) {
+			//cout << line << '\n';
+			if (line.substr(0, pattern.length()) == pattern) {
+				//pattern found
+				cout << "\n" << line << endl;
+				//return only value of pattern
+				//TODO
+			}
+		}
+    configfile.close();
+	} else {
+		printError("Unable to read from config!"); 	
+	}
+}
+
+void initConfig() {
+	std::ofstream outfile ("/etc/tracer.conf");
+	outfile << "# This is the default traver V " << version << " config file" << std::endl;
+	outfile << "startNet:0;" << std::endl;
+	outfile << "endNet:0;" << std::endl;
+	outfile.close();
+}
+
+inline bool checkFileExist (const std::string& name) {
+    ifstream f(name.c_str());
+    return f.good();
+}
+
 int main(int argc, char **argv) {
 	cout << "Welcome to tracer version " << version << endl;
 	printLog("Checking root");
@@ -63,7 +99,17 @@ int main(int argc, char **argv) {
 		printOK("root access");
 		//If config does not exist, create it
 		printLog("Checking config files");
-		
+		if (checkFileExist("/etc/tracer.conf") == 1) {
+			//Config file found
+			printLog("Config found");
+		} else {
+			//Config NOT found
+			printWarn("Config NOT found!");
+			printLog("Creating new one");
+			initConfig();
+		}
+		//Config accessable
+		readFromConfig("startNet:");
 		return 0;
 	} else {
 		printWarn("No root access!");
