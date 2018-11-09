@@ -32,7 +32,10 @@
 
 using namespace std;
 
+//Global Varz
 string version = "1.0";
+int startNet;
+int endNet;
 
 void printLog(string msg) {
 	cout << "\n[INFO] " << msg;
@@ -59,8 +62,9 @@ int checkroot() {
 	return 0;
 }
 
-void readFromConfig(string pattern) {
+string readFromConfig(string pattern) {
 	string line;
+	string returnme = "";
 	
 	ifstream configfile ("/etc/tracer.conf");
 	if (configfile.is_open()) {
@@ -68,9 +72,19 @@ void readFromConfig(string pattern) {
 			//cout << line << '\n';
 			if (line.substr(0, pattern.length()) == pattern) {
 				//pattern found
-				cout << "\n" << line << endl;
+				//cout << "\nREAD" << line << endl;
+				char value[pattern.length()];
+				strcpy(value, line.c_str());
 				//return only value of pattern
-				//TODO
+				for(int i = pattern.length(); i < line.length(); i++) {
+					if (value[i] == ';') {
+						break;
+					}
+					returnme += value[i];
+					//Verbose
+					//cout << "\n[READ] " << value[i] << endl;
+				}
+				return returnme;
 			}
 		}
     configfile.close();
@@ -109,7 +123,10 @@ int main(int argc, char **argv) {
 			initConfig();
 		}
 		//Config accessable
-		readFromConfig("startNet:");
+		startNet = atoi(readFromConfig("startNet:").c_str());
+		endNet = atoi(readFromConfig("endNet:").c_str());
+		//TODO
+		
 		return 0;
 	} else {
 		printWarn("No root access!");
