@@ -29,6 +29,8 @@
 #include <stdio.h>
 #include <fstream>
 #include <string.h>
+#include <chrono>
+#include <thread>
 
 using namespace std;
 
@@ -51,6 +53,14 @@ void printError(string msg) {
 
 void printOK(string msg) {
 	cout << "\n[ OK ] " << msg;
+}
+
+void printOnline(string msg) {
+	cout << "\n[ONLINE] " << msg;
+}
+
+void printOffline(string msg) {
+	cout << "\n[OFFLINE] " << msg;
 }
 
 int checkroot() {
@@ -90,6 +100,7 @@ string readFromConfig(string pattern) {
     configfile.close();
 	} else {
 		printError("Unable to read from config!"); 	
+		return "Unable to read from config!";
 	}
 }
 
@@ -104,6 +115,30 @@ void initConfig() {
 inline bool checkFileExist (const std::string& name) {
     ifstream f(name.c_str());
     return f.good();
+}
+
+void scanNet() {
+	bool yr = true;
+	do {
+	int e = 0;
+		printLog("Starting trace");
+	
+		//Main Loop for scanning the Net
+		for(int oct3 = startNet; oct3 < endNet+1; oct3++) { 
+			for(int oct4 = 1; oct4 < 255; oct4++) { 
+				printLog("scan: 192.168." + to_string(oct3) + "." + to_string(oct4));
+				string scanAddr = "192.168." + to_string(oct3) + "." + to_string(oct4);
+				if ( system((std::string("ping -c 1 " + scanAddr).c_str())) == 0) { 
+					printOnline(scanAddr + " is reachable!");
+				} else {
+					printOffline(scanAddr + " is NOT reachable!\n");
+				}
+			}
+		}
+		e++;
+		printLog("trace complete");
+		//std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	}while(yr);
 }
 
 int main(int argc, char **argv) {
@@ -125,7 +160,7 @@ int main(int argc, char **argv) {
 		//Config accessable
 		startNet = atoi(readFromConfig("startNet:").c_str());
 		endNet = atoi(readFromConfig("endNet:").c_str());
-		//TODO
+		scanNet();
 		
 		return 0;
 	} else {
